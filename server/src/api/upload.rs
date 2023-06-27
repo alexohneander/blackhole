@@ -15,6 +15,7 @@ struct Stats {
 #[post("/api/upload")]
 pub async fn file(mut payload: Multipart) -> Result<HttpResponse, ActixError> {
     let mut file_data = Vec::<u8>::new();
+    let mut token = String::new();
 
     while let Some(mut field) = payload.try_next().await? {
         let content_disposition = field.content_disposition();
@@ -26,7 +27,12 @@ pub async fn file(mut payload: Multipart) -> Result<HttpResponse, ActixError> {
                 while let Some(chunk) = field.try_next().await? {
                     file_data.extend_from_slice(&chunk);
                 }
-            }
+            },
+            "token" => {
+                while let Some(chunk) = field.try_next().await? {
+                    token = String::from_utf8(chunk.to_vec()).unwrap();
+                }
+            },
             _ => {}
         }
     }
@@ -35,7 +41,7 @@ pub async fn file(mut payload: Multipart) -> Result<HttpResponse, ActixError> {
     let length = file_data.len();
 
     // save file
-    let saved = save_file(file_data).await;
+    let saved = save_file(file_data, token).await;
 
     if saved == false {
         return Ok(HttpResponse::InternalServerError().finish());
@@ -46,11 +52,15 @@ pub async fn file(mut payload: Multipart) -> Result<HttpResponse, ActixError> {
     }))
 }
 
-async fn save_file(file_data: Vec<u8>) -> bool {
+async fn save_file(file_data: Vec<u8>, token: String) -> bool {
     // let token = helpers::token::generate_troken();
     let uuid = helpers::token::generate_uuid();
 
     let filename = "./data/".to_owned() + &uuid + ".tmp";
+
+    if token == "" {
+        println!("No token provided");
+    }
 
     let result = fs::write(&filename, file_data);
 
