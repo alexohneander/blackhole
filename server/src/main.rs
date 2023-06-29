@@ -13,7 +13,9 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(|| {
         App::new()
+            // Register Middlewares
             .wrap(Logger::default())
+            // Register Routes
             .service(handlers::index::hello)
             .service(api::download::file)
             .service(api::upload::file)
