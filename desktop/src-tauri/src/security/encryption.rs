@@ -1,45 +1,43 @@
-use aes_gcm::{
-    aead::{Aead, AeadCore, KeyInit, OsRng},
-    Aes256Gcm, Nonce, Key // Or `Aes128Gcm`
-};
+use encryptfile as ef;
 
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Read, Write};
 
+use crate::helpers;
 
 
+pub fn encrypt_file(path: &str) -> Result<String, Box<dyn std::error::Error>> {    
+    let mut c = ef::Config::new();
 
-pub fn encrypt_file(path: &str) -> Result<String, Box<dyn std::error::Error>> {
-    // Open File and BufferReader
-    let mut file = File::open(path)?;
-    let mut reader = BufReader::new(&file);
-    
-    // Create output file
-    let mut output_file = File::create("encrypted_file")?;
-    let mut writer = BufWriter::new(&output_file);
+    let enc_token = helpers::token::generate_token();
 
-    // The encryption key can be generated randomly:
-    let key = Aes256Gcm::generate_key(OsRng);
+    let file_id = helpers::token::generate_uuid() + ".ef";
+    let data_path = "../data/".to_string() + &file_id;
 
-    // Create cipher
-    let cipher = Aes256Gcm::new(&key);
+    c.input_stream(ef::InputStream::File(path.to_owned()))
+        .output_stream(ef::OutputStream::File(data_path))
+        .add_output_option(ef::OutputOption::AllowOverwrite)
+        .initialization_vector(ef::InitializationVector::GenerateFromRng)
+        .password(ef::PasswordType::Text(enc_token, ef::scrypt_defaults()))
+        .encrypt();
 
-    // Encrypt file
-    let mut buffer = [0; 4096];
-    let mut total_bytes_read = 0;
-    
-    // loop {
-    //     let bytes_read = reader.read(&mut buffer)?;
-    //     if bytes_read == 0 {
-    //         break;
-    //     }
-    //     total_bytes_read += bytes_read;
-    //     let mut ciphertext = vec![0; bytes_read + 16];
-    //     let tag = cipher.encrypt(nonce, &buffer[..bytes_read], &mut ciphertext)?;
-    //     writer.write_all(&ciphertext)?;
-    //     writer.write_all(tag.as_ref())?;
-    // }
+    let _ = ef::process(&c).map_err(|e| panic!("error encrypting: {:?}", e));
 
-    println!("File Contents: {} bytes", total_bytes_read);
+    // let result = decrypt_file(&data_path, &enc_token);
+
     Ok("File encrypted successfully ".to_string())
+}
+
+pub fn decrypt_file(path: &str, token: &str) -> Result<String, Box<dyn std::error::Error>> {
+    let mut c = ef::Config::new();
+
+    c.input_stream(ef::InputStream::File(path.to_owned()))
+        .output_stream(ef::OutputStream::File("/tmp/__encrypted_bash_history.txt".to_owned()))
+        .add_output_option(ef::OutputOption::AllowOverwrite)
+        .password(ef::PasswordType::Text(token.to_owned(), ef::PasswordKeyGenMethod::ReadFromFile))
+        .decrypt();
+
+    let _ = ef::process(&c).map_err(|e| panic!("error decrypting: {:?}", e));  
+
+    Ok("File decrypted successfully ".to_string())
 }
