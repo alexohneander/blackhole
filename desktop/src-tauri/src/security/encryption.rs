@@ -15,15 +15,13 @@ pub fn encrypt_file(path: &str) -> Result<String, Box<dyn std::error::Error>> {
     let data_path = "../data/".to_string() + &file_id;
 
     c.input_stream(ef::InputStream::File(path.to_owned()))
-        .output_stream(ef::OutputStream::File(data_path))
+        .output_stream(ef::OutputStream::File(data_path.clone()))
         .add_output_option(ef::OutputOption::AllowOverwrite)
         .initialization_vector(ef::InitializationVector::GenerateFromRng)
-        .password(ef::PasswordType::Text(enc_token, ef::scrypt_defaults()))
+        .password(ef::PasswordType::Text(enc_token.clone(), ef::scrypt_defaults()))
         .encrypt();
 
     let _ = ef::process(&c).map_err(|e| panic!("error encrypting: {:?}", e));
-
-    // let result = decrypt_file(&data_path, &enc_token);
 
     Ok("File encrypted successfully ".to_string())
 }
@@ -32,7 +30,7 @@ pub fn decrypt_file(path: &str, token: &str) -> Result<String, Box<dyn std::erro
     let mut c = ef::Config::new();
 
     c.input_stream(ef::InputStream::File(path.to_owned()))
-        .output_stream(ef::OutputStream::File("/tmp/__encrypted_bash_history.txt".to_owned()))
+        .output_stream(ef::OutputStream::File("../data/test.txt".to_owned()))
         .add_output_option(ef::OutputOption::AllowOverwrite)
         .password(ef::PasswordType::Text(token.to_owned(), ef::PasswordKeyGenMethod::ReadFromFile))
         .decrypt();
