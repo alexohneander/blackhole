@@ -2,6 +2,7 @@ import { useState } from "react";
 import reactLogo from "./assets/react.svg";
 import { invoke } from "@tauri-apps/api/tauri";
 import "./App.css";
+import UploadFile from "./components/buttons/upload-file.component";
 
 function App() {
   const [greetMsg, setGreetMsg] = useState("");
@@ -14,7 +15,7 @@ function App() {
 
   return (
     <div className="container">
-      <h1>Welcome to Tauri!</h1>
+      <h1>Welcome to Blackhole!</h1>
 
       <div className="row">
         <a href="https://vitejs.dev" target="_blank">
@@ -30,7 +31,7 @@ function App() {
 
       <p>Click on the Tauri, Vite, and React logos to learn more.</p>
 
-      <form
+      {/* <form
         className="row"
         onSubmit={(e) => {
           e.preventDefault();
@@ -43,8 +44,8 @@ function App() {
           placeholder="Enter a name..."
         />
         <button type="submit">Greet</button>
-      </form>
-
+      </form> */}
+      <UploadFile />
       <p>{greetMsg}</p>
     </div>
   );
