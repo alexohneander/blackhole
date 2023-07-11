@@ -29,6 +29,7 @@ function UploadFile() {
 
     return (
         <div className="upload-file">
+            <input type="text" className="form-control" value={uploadMsg} readOnly /> <br />
             <button type="button" className="btn btn-primary" onClick={selectFile}>Upload File</button>
         </div>
     );

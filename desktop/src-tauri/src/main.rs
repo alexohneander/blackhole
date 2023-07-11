@@ -13,16 +13,17 @@ fn greet(name: &str) -> String {
 #[tauri::command]
 fn upload_file(path: &str) -> String {
     println!("Backend Side File: {}", &path);
-    
-    // TODO: Encrypt file and upload to server
-    let result = security::encryption::encrypt_file(&path);
 
-    match result {
-        Ok(_) => println!("File uploaded successfully"),
-        Err(e) => println!("Error uploading file: {}", e),
+    // File Encryption
+    let result = security::encryption::encrypt_file(&path);
+    match &result {
+        Ok(_) => println!("File encrypted successfully"),
+        Err(e) => println!("Error encrypting file: {}", e),
     }
 
-    format!("Backend Side File: {}", path)
+    //TODO: File Upload
+
+    return result.unwrap().enc_token;
 }
 
 fn main() {
